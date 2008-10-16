@@ -1,5 +1,6 @@
 require 'rexml/document'
 require 'base64'
+
 # processes XML output by PHC 0.1.7 @ http://www.phpcompiler.org/src/archive/phc-0.1.7.tar.bz2
 class Converter
   class << self
@@ -12,9 +13,13 @@ class Converter
   include REXML
   METHOD_NAME_MAP = {
     "%STDLIB%" => {
-      "echo" => "puts"
+      "echo" => "print"
     },
   }
+  def convert(xml)
+    return eval(Document.new(xml).root)
+  end
+  
   token 'AST_method_invocation', :php_method
   def php_method(node)
     class_name = val(node.elements['Token_class_name'])
@@ -86,9 +91,7 @@ class Converter
 
   token 'AST_statement_list', :statement_list
   def statement_list(node)
-    statements = XPath.match(node, 'AST_eval_expr').collect do |n|
-      eval(strip_useless_nodes(n.children).first)
-    end
+    statements = strip_useless_nodes(node.children).collect {|n| eval(n)}
     return statements.join("\n")
   end
 
@@ -111,4 +114,18 @@ class Converter
     first, operator, second = strip_useless_nodes(node.children)
     return "#{eval(first)} #{eval(operator)} #{eval(second)}"
   end
+
+  token 'AST_php_script', :script
+  def script(node)
+    statement_list = XPath.match(node, 'AST_class_def_list/AST_class_def/AST_member_list/AST_method[1]/AST_statement_list').first
+    
+    return eval(statement_list)
+  end
+  
+  token 'AST_eval_expr', :eval_expression
+  def eval_expression(node)
+    nodes = strip_useless_nodes(node.children).collect {|n| eval(n)}
+    return nodes.join("\n")
+  end
+  
 end 

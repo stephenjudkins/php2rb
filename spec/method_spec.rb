@@ -8,7 +8,7 @@ describe Converter, " dealing with method definitions" do
     @converter = nil
   end
   
-  it "should convert 'echo' to 'puts'" do
+  it "should convert 'echo' to 'print'" do
     xml = <<HERE
     <AST_method_invocation>
       <attrs>
@@ -42,7 +42,7 @@ describe Converter, " dealing with method definitions" do
       </AST_actual_parameter_list>
     </AST_method_invocation>
 HERE
-    @converter.eval(e(xml)).should == 'puts("hello world")'
+    @converter.eval(e(xml)).should == 'print("hello world")'
   end
 
   it "should parse arguments" do
