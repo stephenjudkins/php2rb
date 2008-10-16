@@ -1,4 +1,5 @@
 require 'rexml/document'
+require 'base64'
 # processes XML output by PHC 0.1.7 @ http://www.phpcompiler.org/src/archive/phc-0.1.7.tar.bz2
 class Converter
   include REXML
@@ -18,7 +19,9 @@ class Converter
   end
 
   def val(node)
-    return node.elements['value'].text
+    val_node = node.elements['value']
+    text = val_node.text
+    return val_node.attributes['encoding'] == 'base64' ? Base64.decode64(text) : text
   end
 
   def arguments(node)
@@ -53,6 +56,10 @@ class Converter
       return statement_list(node)
     when 'AST_if'
       return php_if(node)
+    when 'AST_bin_op'
+      return comparison(node)
+    when 'Token_op'
+      return val(node)
     end
   end
 
@@ -99,5 +106,10 @@ class Converter
     end
     out << "end"
     return out.join("\n")
+  end
+  
+  def comparison(node)
+    first, operator, second = strip_useless_nodes(node.children)
+    return "#{eval(first)} #{eval(operator)} #{eval(second)}"
   end
 end 
