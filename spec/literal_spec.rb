@@ -67,7 +67,7 @@ HERE
     @converter.eval(e(xml)).should == '3'
   end
   
-  it "converts flaots" do
+  it "converts floats" do
     xml = <<HERE
     <Token_real>
 			<attrs>
