@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-describe Converter, " dealing with method definitions" do
+describe Converter, " with method invocations" do
   before do
     @converter = Converter.new
   end

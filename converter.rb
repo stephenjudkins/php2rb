@@ -20,8 +20,8 @@ class Converter
     return eval(Document.new(xml).root)
   end
   
-  token 'AST_method_invocation', :php_method
-  def php_method(node)
+  token 'AST_method_invocation', :invoke_methods
+  def invoke_methods(node)
     class_name = val(node.elements['Token_class_name'])
     method_name = val(node.elements['Token_method_name'])
 
@@ -30,7 +30,13 @@ class Converter
     arguments = arguments_node ? arguments(arguments_node): []
     return "#{ruby_method_name}(#{arguments.join ", "})"
   end
-
+  token 'AST_method', :define_method
+  def define_method(node)
+    method_name = val(XPath.match(node, 'AST_signature/Token_method_name').first)
+    statement_list = node.elements['AST_statement_list']
+    parameters = node.elements['AST_formal_parameter_list']
+    return "def #{method_name}\n#{eval(statement_list)}\nend"
+  end
   token 'Token_op', :val
   def val(node)
     val_node = node.elements['value']
@@ -127,5 +133,4 @@ class Converter
     nodes = strip_useless_nodes(node.children).collect {|n| eval(n)}
     return nodes.join("\n")
   end
-  
 end 
