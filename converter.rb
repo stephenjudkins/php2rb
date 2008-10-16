@@ -2,12 +2,20 @@ require 'rexml/document'
 require 'base64'
 # processes XML output by PHC 0.1.7 @ http://www.phpcompiler.org/src/archive/phc-0.1.7.tar.bz2
 class Converter
+  class << self
+    attr_reader :token_map
+    def token(token, method)
+      @token_map ||= {}
+      @token_map[token] = method
+    end
+  end
   include REXML
   METHOD_NAME_MAP = {
     "%STDLIB%" => {
       "echo" => "puts"
     },
   }
+  token 'AST_method_invocation', :php_method
   def php_method(node)
     class_name = val(node.elements['Token_class_name'])
     method_name = val(node.elements['Token_method_name'])
@@ -18,6 +26,7 @@ class Converter
     return "#{ruby_method_name}(#{arguments.join ", "})"
   end
 
+  token 'Token_op', :val
   def val(node)
     val_node = node.elements['value']
     text = val_node.text
@@ -35,59 +44,47 @@ class Converter
   end
 
   def eval(node)
-    case node.name
-    when 'Token_bool'
-      return boolean(node)
-    when 'Token_string'
-      return string(node)
-    when 'Token_int'
-      return integer(node)
-    when 'Token_real'
-      return float(node)
-    when 'Token_null'
-      return 'nil'
-    when 'AST_method_invocation'
-      return php_method(node)
-    when 'AST_assignment'
-      return assignment(node)
-    when 'AST_variable'
-      return variable(node)
-    when 'AST_statement_list'
-      return statement_list(node)
-    when 'AST_if'
-      return php_if(node)
-    when 'AST_bin_op'
-      return comparison(node)
-    when 'Token_op'
-      return val(node)
-    end
+    method_name = self.class.token_map[node.name]
+    return send(method_name, node) if method_name
   end
 
+  token 'Token_null', :php_null
+  def php_null(token)
+    return 'nil'
+  end
+
+  token 'Token_string', :string
   def string(node)
     return val(node).to_s.inspect
   end
-
+  
+  token 'Token_bool', :boolean
   def boolean(node)
     return (val(node).to_s == 'True').to_s
   end
 
+  token 'Token_int', :integer
   def integer(node)
     return val(node).to_i.to_s
   end
 
+  token 'Token_real', :float
   def float(node)
     node.elements['source_rep'].text.to_s
   end
 
+  token 'AST_assignment', :assignment
   def assignment(node)
     var, val = strip_useless_nodes(node.children).collect {|n| eval(n)}
     return "#{var} = #{val}"
   end
 
+  token 'AST_variable', :variable
   def variable(node)
     return val(XPath.match(node, 'Token_variable_name').first)
   end
 
+  token 'AST_statement_list', :statement_list
   def statement_list(node)
     statements = XPath.match(node, 'AST_eval_expr').collect do |n|
       eval(strip_useless_nodes(n.children).first)
@@ -95,6 +92,7 @@ class Converter
     return statements.join("\n")
   end
 
+  token 'AST_if', :php_if
   def php_if(node)
     out = []
     condition, if_statement, else_statement = strip_useless_nodes(node.children)
@@ -107,7 +105,8 @@ class Converter
     out << "end"
     return out.join("\n")
   end
-  
+
+  token 'AST_bin_op', :comparison
   def comparison(node)
     first, operator, second = strip_useless_nodes(node.children)
     return "#{eval(first)} #{eval(operator)} #{eval(second)}"
