@@ -198,4 +198,100 @@ HERE
     # foo_method(bar_method(true));
     @converter.eval(e(xml)).should == 'foo_method(bar_method(true))'
   end
+  it "with methods of object instances" do
+    xml = <<HERE
+    <AST_method_invocation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <attrs>
+        <attr key="phc.filename">test2.php</attr>
+        <attr key="phc.line_number">4</attr>
+        <attr key="phc.unparser.needs_brackets">false</attr>
+      </attrs>
+      <AST_variable>
+        <attrs>
+          <attr key="phc.filename">test2.php</attr>
+          <attr key="phc.line_number">4</attr>
+          <attr key="phc.unparser.needs_brackets">false</attr>
+        </attrs>
+        <Token_class_name>
+          <attrs />
+          <value>%MAIN%</value>
+        </Token_class_name>
+        <Token_variable_name>
+          <attrs />
+          <value>spam</value>
+        </Token_variable_name>
+        <AST_expr_list>
+          <attrs />
+        </AST_expr_list>
+        <AST_expr xsi:nil="true" />
+      </AST_variable>
+      <Token_method_name>
+        <attrs>
+          <attr key="phc.filename">test2.php</attr>
+          <attr key="phc.line_number">4</attr>
+        </attrs>
+        <value>eggs</value>
+      </Token_method_name>
+      <AST_actual_parameter_list>
+        <attrs />
+        <AST_actual_parameter>
+          <attrs>
+            <attr key="phc.filename">test2.php</attr>
+            <attr key="phc.line_number">4</attr>
+          </attrs>
+          <bool>false</bool>
+          <Token_bool>
+            <attrs>
+              <attr key="phc.filename">test2.php</attr>
+              <attr key="phc.line_number">4</attr>
+              <attr key="phc.unparser.needs_brackets">false</attr>
+            </attrs>
+            <value>True</value>
+            <source_rep>true</source_rep>
+          </Token_bool>
+        </AST_actual_parameter>
+      </AST_actual_parameter_list>
+    </AST_method_invocation>
+HERE
+    @converter.eval(e(xml)).should == 'spam.eggs(true)'
+  end
+  it "with class method invocation" do
+    xml = <<HERE
+    <AST_method_invocation>
+			<attrs>
+				<attr key="phc.filename">test2.php</attr>
+				<attr key="phc.line_number">5</attr>
+				<attr key="phc.unparser.needs_brackets">false</attr>
+			</attrs>
+			<Token_class_name>
+				<attrs />
+				<value>SpamClass</value>
+			</Token_class_name>
+			<Token_method_name>
+				<attrs />
+				<value>eggs</value>
+			</Token_method_name>
+			<AST_actual_parameter_list>
+				<attrs />
+				<AST_actual_parameter>
+					<attrs>
+						<attr key="phc.filename">test2.php</attr>
+						<attr key="phc.line_number">5</attr>
+					</attrs>
+					<bool>false</bool>
+					<Token_bool>
+						<attrs>
+							<attr key="phc.filename">test2.php</attr>
+							<attr key="phc.line_number">5</attr>
+							<attr key="phc.unparser.needs_brackets">false</attr>
+						</attrs>
+						<value>True</value>
+						<source_rep>true</source_rep>
+					</Token_bool>
+				</AST_actual_parameter>
+			</AST_actual_parameter_list>
+		</AST_method_invocation>
+HERE
+    @converter.eval(e(xml)).should == "SpamClass.eggs(true)"
+  end
 end

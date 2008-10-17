@@ -22,12 +22,21 @@ class Converter
   
   token 'AST_method_invocation', :invoke_methods
   def invoke_methods(node)
-    class_name = val(node.elements['Token_class_name'])
+    class_token = node.elements['Token_class_name']
+    class_name = class_token ? val(class_token) : nil
+    class_method = class_name ? class_name.index("%") != 0 : false
+
+    instance_node = node.elements['AST_variable']
+    instance_name = instance_node ? eval(instance_node) : nil
     method_name = val(node.elements['Token_method_name'])
 
     ruby_method_name = (METHOD_NAME_MAP[class_name] || {})[method_name] || method_name
     arguments_node = node.elements['AST_actual_parameter_list']
-    return "#{ruby_method_name}(#{eval(arguments_node)})"
+    
+    out = "#{ruby_method_name}(#{eval(arguments_node)})"
+    out = "#{instance_name}.#{out}" if instance_name
+    out = "#{class_name}.#{out}" if class_method
+    return out
   end
   token 'AST_method', :define_method
   def define_method(node)
