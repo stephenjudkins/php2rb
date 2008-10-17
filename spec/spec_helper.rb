@@ -8,5 +8,5 @@ def e(xml)
 end
 
 def debug(str)
-  puts CGI.escapeHTML(str)
+  puts CGI.escapeHTML(str.inspect)
 end

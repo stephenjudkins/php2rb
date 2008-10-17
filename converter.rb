@@ -143,6 +143,21 @@ class Converter
   token 'AST_formal_parameter_list', :method_parameter_list
   def method_parameter_list(node)
     parameters = node.elements['AST_formal_parameter']
+    return "" unless parameters
     return strip_useless_nodes(parameters.children).collect {|n| eval(n)}.select {|n| n}.join(", ")
+  end
+  
+  token 'AST_class_def', :class_def
+  def class_def(node)
+    class_name = val(node.elements['Token_class_name'])
+    member_nodes = strip_useless_nodes(node.elements['AST_member_list'].children)
+    members = member_nodes.collect {|n| eval(n)}.select {|n| n}.join("\n")
+    return "class #{class_name}\n#{members}\nend"
+  end
+  
+  token 'AST_return', :php_return
+  def php_return(node)
+    return_val = strip_useless_nodes(node.children).first
+    return "return #{eval(return_val)}"
   end
 end 
