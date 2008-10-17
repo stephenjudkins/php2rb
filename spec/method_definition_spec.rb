@@ -141,29 +141,29 @@ end'
 
   it "with parameter list" do
     xml = <<HERE
-		<AST_formal_parameter_list xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-			<attrs />
-			<AST_formal_parameter>
-				<attrs>
-					<attr key="phc.filename">test4.php</attr>
-					<attr key="phc.line_number">2</attr>
-				</attrs>
-				<AST_type>
-					<attrs>
-						<attr key="phc.filename">test4.php</attr>
-						<attr key="phc.line_number">2</attr>
-					</attrs>
-					<bool>false</bool>
-					<Token_class_name xsi:nil="true" />
-				</AST_type>
-				<bool>false</bool>
-				<Token_variable_name>
-					<attrs />
-					<value>bar</value>
-				</Token_variable_name>
-				<AST_expr xsi:nil="true" />
-			</AST_formal_parameter>
-		</AST_formal_parameter_list>
+    <AST_formal_parameter_list xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <attrs />
+      <AST_formal_parameter>
+        <attrs>
+          <attr key="phc.filename">test4.php</attr>
+          <attr key="phc.line_number">2</attr>
+        </attrs>
+        <AST_type>
+          <attrs>
+            <attr key="phc.filename">test4.php</attr>
+            <attr key="phc.line_number">2</attr>
+          </attrs>
+          <bool>false</bool>
+          <Token_class_name xsi:nil="true" />
+        </AST_type>
+        <bool>false</bool>
+        <Token_variable_name>
+          <attrs />
+          <value>bar</value>
+        </Token_variable_name>
+        <AST_expr xsi:nil="true" />
+      </AST_formal_parameter>
+    </AST_formal_parameter_list>
 HERE
     @converter.eval(e(xml)).should == "bar"
   end
@@ -171,40 +171,40 @@ HERE
   it "with no parameters" do
     xml = <<HERE
     <AST_method>
-			<attrs>
-				<attr key="phc.comments">
-				</attr>
-				<attr key="phc.filename">test4.php</attr>
-				<attr key="phc.line_number">3</attr>
-			</attrs>
-			<AST_signature>
-				<attrs>
-					<attr key="phc.filename">test4.php</attr>
-					<attr key="phc.line_number">5</attr>
-				</attrs>
-				<AST_method_mod>
-					<attrs />
-					<bool>true</bool>
-					<bool>false</bool>
-					<bool>false</bool>
-					<bool>false</bool>
-					<bool>false</bool>
-					<bool>false</bool>
-				</AST_method_mod>
-				<bool>false</bool>
-				<Token_method_name>
-					<attrs />
-					<value>eggs</value>
-				</Token_method_name>
-				<AST_formal_parameter_list>
-					<attrs />
-				</AST_formal_parameter_list>
-			</AST_signature>
-			<AST_statement_list>
-				<attrs>
-					<attr key="phc.comments">
-					</attr>
-				</attrs>
+      <attrs>
+        <attr key="phc.comments">
+        </attr>
+        <attr key="phc.filename">test4.php</attr>
+        <attr key="phc.line_number">3</attr>
+      </attrs>
+      <AST_signature>
+        <attrs>
+          <attr key="phc.filename">test4.php</attr>
+          <attr key="phc.line_number">5</attr>
+        </attrs>
+        <AST_method_mod>
+          <attrs />
+          <bool>true</bool>
+          <bool>false</bool>
+          <bool>false</bool>
+          <bool>false</bool>
+          <bool>false</bool>
+          <bool>false</bool>
+        </AST_method_mod>
+        <bool>false</bool>
+        <Token_method_name>
+          <attrs />
+          <value>eggs</value>
+        </Token_method_name>
+        <AST_formal_parameter_list>
+          <attrs />
+        </AST_formal_parameter_list>
+      </AST_signature>
+      <AST_statement_list>
+        <attrs>
+          <attr key="phc.comments">
+          </attr>
+        </attrs>
         <AST_method_invocation>
           <attrs>
             <attr key="phc.filename">test.php</attr>
@@ -236,8 +236,8 @@ HERE
             </AST_actual_parameter>
           </AST_actual_parameter_list>
         </AST_method_invocation>
-			</AST_statement_list>
-		</AST_method>
+      </AST_statement_list>
+    </AST_method>
 HERE
     @converter.eval(e(xml)).should == 'def eggs()
 print("spam")
@@ -247,22 +247,22 @@ end'
   it "with return" do
     xml = <<HERE
     <AST_return>
-			<attrs>
-				<attr key="phc.comments">
-				</attr>
-				<attr key="phc.filename">test4.php</attr>
-				<attr key="phc.line_number">4</attr>
-			</attrs>
-			<Token_string>
-				<attrs>
-					<attr key="phc.filename">test4.php</attr>
-					<attr key="phc.line_number">4</attr>
-					<attr key="phc.unparser.needs_brackets">false</attr>
-				</attrs>
-				<value>blah</value>
-				<source_rep>blah</source_rep>
-			</Token_string>
-		</AST_return>
+      <attrs>
+        <attr key="phc.comments">
+        </attr>
+        <attr key="phc.filename">test4.php</attr>
+        <attr key="phc.line_number">4</attr>
+      </attrs>
+      <Token_string>
+        <attrs>
+          <attr key="phc.filename">test4.php</attr>
+          <attr key="phc.line_number">4</attr>
+          <attr key="phc.unparser.needs_brackets">false</attr>
+        </attrs>
+        <value>blah</value>
+        <source_rep>blah</source_rep>
+      </Token_string>
+    </AST_return>
 HERE
     @converter.eval(e(xml)).should == 'return "blah"'
   end
