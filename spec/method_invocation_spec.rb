@@ -130,7 +130,7 @@ HERE
 			</AST_actual_parameter>
 		</AST_actual_parameter_list>
 HERE
-    @converter.arguments(e(xml)).should == ['1','"foo"', '3.14', 'true', 'nil']
+    @converter.eval(e(xml)).should == '1, "foo", 3.14, true, nil'
   end
   
   it "converts nested function calls" do

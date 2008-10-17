@@ -27,15 +27,14 @@ class Converter
 
     ruby_method_name = (METHOD_NAME_MAP[class_name] || {})[method_name] || method_name
     arguments_node = node.elements['AST_actual_parameter_list']
-    arguments = arguments_node ? arguments(arguments_node): []
-    return "#{ruby_method_name}(#{arguments.join ", "})"
+    return "#{ruby_method_name}(#{eval(arguments_node)})"
   end
   token 'AST_method', :define_method
   def define_method(node)
     method_name = val(XPath.match(node, 'AST_signature/Token_method_name').first)
     statement_list = node.elements['AST_statement_list']
-    parameters = node.elements['AST_formal_parameter_list']
-    return "def #{method_name}\n#{eval(statement_list)}\nend"
+    parameters = XPath.match(node, 'AST_signature/AST_formal_parameter_list').first
+    return "def #{method_name}(#{eval(parameters)})\n#{eval(statement_list)}\nend"
   end
   token 'Token_op', :val
   def val(node)
@@ -43,11 +42,13 @@ class Converter
     text = val_node.text
     return val_node.attributes['encoding'] == 'base64' ? Base64.decode64(text) : text
   end
-
+  
+  token 'AST_actual_parameter_list', :arguments
   def arguments(node)
     out = XPath.match(node, 'AST_actual_parameter').collect do |param|
       eval(strip_useless_nodes(param.children).first)
     end
+    return out.join(', ')
   end
 
   def strip_useless_nodes(nodes)
@@ -94,6 +95,11 @@ class Converter
   def variable(node)
     return val(XPath.match(node, 'Token_variable_name').first)
   end
+  
+  token 'Token_variable_name', :variable_name
+  def variable_name(node)
+    return val(node)
+  end
 
   token 'AST_statement_list', :statement_list
   def statement_list(node)
@@ -132,5 +138,11 @@ class Converter
   def eval_expression(node)
     nodes = strip_useless_nodes(node.children).collect {|n| eval(n)}
     return nodes.join("\n")
+  end
+
+  token 'AST_formal_parameter_list', :method_parameter_list
+  def method_parameter_list(node)
+    parameters = node.elements['AST_formal_parameter']
+    return strip_useless_nodes(parameters.children).collect {|n| eval(n)}.select {|n| n}.join(", ")
   end
 end 
