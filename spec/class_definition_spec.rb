@@ -96,9 +96,9 @@ describe Converter, " defining classes" do
 </AST_class_def>
 HERE
   @converter.eval(e(xml)).should == 'class Spam
-def eggs()
-return "blah"
-end
+  def eggs()
+    return "blah"
+  end
 end'
  end
 end

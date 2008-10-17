@@ -3,6 +3,10 @@ require 'base64'
 
 # processes XML output by PHC 0.1.7 @ http://www.phpcompiler.org/src/archive/phc-0.1.7.tar.bz2
 class Converter
+  attr_accessor :indent
+  def initialize
+    @indent == true
+  end
   class << self
     attr_reader :token_map
     def token(token, method)
@@ -43,7 +47,7 @@ class Converter
     method_name = val(XPath.match(node, 'AST_signature/Token_method_name').first)
     statement_list = node.elements['AST_statement_list']
     parameters = XPath.match(node, 'AST_signature/AST_formal_parameter_list').first
-    return "def #{method_name}(#{eval(parameters)})\n#{eval(statement_list)}\nend"
+    return "def #{method_name}(#{eval(parameters)})\n#{indent(eval(statement_list))}\nend"
   end
   token 'Token_op', :val
   def val(node)
@@ -55,7 +59,7 @@ class Converter
   token 'AST_actual_parameter_list', :arguments
   def arguments(node)
     out = XPath.match(node, 'AST_actual_parameter').collect do |param|
-      eval(strip_useless_nodes(param.children).first, false)
+      eval(strip_useless_nodes(param.children).first, :brackets => false)
     end
     return out.join(', ')
   end
@@ -64,7 +68,8 @@ class Converter
     nodes.select {|n| n.is_a?(Element) and !['attrs', 'bool'].include?(n.name)}
   end
 
-  def eval(node, brackets=nil)
+  def eval(node, options={})
+    brackets = options[:brackets]
     method_name = self.class.token_map[node.name]
     return nil unless method_name
 
@@ -73,6 +78,10 @@ class Converter
     output = send(method_name, node)
     output = "(#{output})" if brackets
     return output
+  end
+
+  def indent(str)
+    return str.split("\n").collect {|l| "  #{l}"}.join("\n")
   end
 
   token 'Token_null', :php_null
@@ -167,7 +176,7 @@ class Converter
     class_name = val(node.elements['Token_class_name'])
     member_nodes = strip_useless_nodes(node.elements['AST_member_list'].children)
     members = member_nodes.collect {|n| eval(n)}.select {|n| n}.join("\n")
-    return "class #{class_name}\n#{members}\nend"
+    return "class #{class_name}\n#{indent(members)}\nend"
   end
   
   token 'AST_return', :php_return

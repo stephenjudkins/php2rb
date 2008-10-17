@@ -135,7 +135,7 @@ describe Converter, " with method definitions" do
     </AST_method>
 HERE
     @converter.eval(e(xml)).should == 'def foo(bar)
-print(bar + 1)
+  print(bar + 1)
 end'
   end
 
@@ -240,7 +240,7 @@ HERE
     </AST_method>
 HERE
     @converter.eval(e(xml)).should == 'def eggs()
-print("spam")
+  print("spam")
 end'
   end
   
