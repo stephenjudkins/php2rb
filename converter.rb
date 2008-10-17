@@ -46,7 +46,7 @@ class Converter
   token 'AST_actual_parameter_list', :arguments
   def arguments(node)
     out = XPath.match(node, 'AST_actual_parameter').collect do |param|
-      eval(strip_useless_nodes(param.children).first)
+      eval(strip_useless_nodes(param.children).first, false)
     end
     return out.join(', ')
   end
@@ -55,9 +55,15 @@ class Converter
     nodes.select {|n| n.is_a?(Element) and !['attrs', 'bool'].include?(n.name)}
   end
 
-  def eval(node)
+  def eval(node, brackets=nil)
     method_name = self.class.token_map[node.name]
-    return send(method_name, node) if method_name
+    return nil unless method_name
+
+    attrs = node_attrs(node)
+    brackets = attrs['phc.unparser.needs_brackets'] == 'true' if brackets == nil
+    output = send(method_name, node)
+    output = "(#{output})" if brackets
+    return output
   end
 
   token 'Token_null', :php_null
@@ -159,5 +165,15 @@ class Converter
   def php_return(node)
     return_val = strip_useless_nodes(node.children).first
     return "return #{eval(return_val)}"
+  end
+  
+  def node_attrs(node)
+    attrs_node = node.elements['attrs']
+    return {} unless attrs_node
+    return attrs_node.children.inject({}) do |m, e|
+      next m unless e and e.is_a?(Element)
+      m[e.attributes['key']] = e.text
+      m
+    end
   end
 end 

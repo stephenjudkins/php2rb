@@ -43,7 +43,7 @@ HERE
       <attrs>
         <attr key="phc.filename">test.php</attr>
         <attr key="phc.line_number">2</attr>
-        <attr key="phc.unparser.needs_brackets">true</attr>
+        <attr key="phc.unparser.needs_brackets">false</attr>
       </attrs>
       <value>hello world</value>
       <source_rep>hello world</source_rep>
