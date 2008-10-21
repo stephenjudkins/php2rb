@@ -221,9 +221,9 @@ HERE
 HERE
     @converter.eval(e(xml)).should == 'foo = true
 if foo
-print("yes!")
+  print("yes!")
 else
-print("no!")
+  print("no!")
 end'
 
   end
@@ -350,9 +350,9 @@ end'
     </AST_if>
 HERE
     @converter.eval(e(xml)).should == 'if foo
-print("yes!")
+  print("yes!")
 else
-print("no!")
+  print("no!")
 end'
   end
   

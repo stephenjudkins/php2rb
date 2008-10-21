@@ -136,10 +136,10 @@ class Converter
     out = []
     condition, if_statement, else_statement = strip_useless_nodes(node.children)
     out << "if #{eval condition}"
-    out << eval(if_statement)
+    out << indent(eval(if_statement))
     if else_statement
       out << "else"
-      out << eval(else_statement)
+      out << indent(eval(else_statement))
     end
     out << "end"
     return out.join("\n")

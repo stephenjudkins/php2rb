@@ -11,9 +11,9 @@ describe Converter, " converts entire scripts" do
     xml = File.read(File.dirname(__FILE__) + '/full_script.xml')
     @converter.eval(e(xml)).should == 'foo = true
 if foo
-print("yes!")
+  print("yes!")
 else
-print("no!")
+  print("no!")
 end'
     
   end
