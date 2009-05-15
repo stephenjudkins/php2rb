@@ -1,11 +1,9 @@
 $: << File.dirname(__FILE__)
 $: << File.expand_path(File.dirname(__FILE__) + '/../lib')
 
-
 def php(expr)
   Php2Rb::Converter.convert("<? #{expr} ?>")
 end
-
 
 def equal_ruby(ruby)
   EqualRuby.new(ruby)
@@ -14,6 +12,7 @@ end
 class EqualRuby
   def initialize(ruby)
     @ruby = ruby
+    @expected_sexp = RubyParser.new.process(@ruby)
   end
 
   def matches?(sexp)
@@ -24,7 +23,8 @@ class EqualRuby
     rescue Exception
       nil
     end
-    @sexp == (@expected_sexp = RubyParser.new.process(@ruby))
+
+    @sexp == @expected_sexp
   end
 
   def failure_message
@@ -33,7 +33,6 @@ class EqualRuby
     begin
       @expected_ruby = Ruby2Ruby.new.process(@sexp)
     rescue Exception => e
-      @expected_sexp = RubyParser.new.process(@ruby)
       return broken
     end
     "expected '#{@ruby}' to be the same as '#{@expected_ruby}'"

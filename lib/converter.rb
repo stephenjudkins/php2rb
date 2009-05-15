@@ -7,7 +7,7 @@ require 'ruby2ruby'
 
 
 class Java::ComCauchoQuercusProgram::EchoStatement
-  field_reader :_expr => :expression
+  field_reader :_expr => :expr
 end
 
 class Java::ComCauchoQuercusExpr::BinaryExpr
@@ -22,6 +22,10 @@ class Java::ComCauchoQuercusExpr::StringLiteralExpr
   field_reader :_value => :value
 end
 
+class Java::ComCauchoQuercusExpr::FunctionExpr
+  field_reader :_args => :args
+end
+
 class Java::ComCauchoQuercusProgram::TextStatement
   field_reader :_value => :value
 end
@@ -31,7 +35,7 @@ class Java::ComCauchoQuercusProgram::Function
 end
 
 class Java::ComCauchoQuercusProgram::ReturnStatement
-  field_reader :_expr => :expression
+  field_reader :_expr => :expr
 end
 
 module Php2Rb
@@ -58,9 +62,12 @@ class Converter
       program.functions.collect {|f| p(f) }
     end
 
+    def node_type(node)
+      node.java_class.name.split(".").last.snake_case.to_sym
+    end
+
     def p(node)
-      method_name = node.java_class.name.split(".").last.snake_case
-      send method_name, node
+      send node_type(node), node
     end
 
     def method_missing(method, node)
@@ -68,11 +75,35 @@ class Converter
     end
 
     def echo_statement(node)
-      s(:call, nil, :print, s(:arglist, p(node.expression)))
+      s(:call, nil, :print, s(:arglist, p(node.expr)))
     end
 
     def add_expr(node)
-      s(:call, p(node.left), :+, s(:arglist, p(node.right)))
+      binary_expr node, :+
+    end
+
+    def sub_expr(node)
+      binary_expr node, :-
+    end
+
+    def mul_expr(node)
+      binary_expr node, :*
+    end
+
+    def div_expr(node)
+      binary_expr node, :/
+    end
+
+    def gt_expr(node)
+      binary_expr node, :>
+    end
+
+    def lt_expr(node)
+      binary_expr node, :<
+    end
+
+    def binary_expr(node, operator)
+      s(:call, p(node.left), operator, s(:arglist, p(node.right)))
     end
 
     def literal_expr(node)
@@ -81,6 +112,10 @@ class Converter
 
     def long_value(node)
       node.to_long
+    end
+
+    def double_value(node)
+      node.toJavaObject
     end
 
     def const_expr(node)
@@ -127,19 +162,24 @@ class Converter
     def function(node)
       s(:defn,
         node.name.to_sym,
-        s(:args, *node.args.collect {|arg| p arg } ),
+        s(:args, *node.args.inject([]) {|m, arg| m += p(arg); m } ),
         s(:scope, s(:block, p(node.statement)))
       )
     end
 
     def arg(node)
-      node.name.to_sym
+      name = node.name.to_sym
+      return [name] if node_type(node.default) == :required_expr
+      return [name, s(:block, s(:lasgn, name, p(node.default)))]
     end
 
     def return_statement(node)
-      s(:return, p(node.expression))
+      s(:return, p(node.expr))
     end
 
+    def function_expr(node)
+      s(:call, nil, node.name.to_sym, s(:arglist, *node.args.collect {|a| p(a) }) )
+    end
   end
 end
 
