@@ -93,9 +93,28 @@ describe Php2Rb::Converter do
 
   end
 
-
   it "should convert function calls" do
     php("foo(\"bar\", $spam);").should equal_ruby("foo('bar', spam)")
+  end
+
+  it "should convert appending" do
+    php('"foo".$b').should equal_ruby('"foo" + b')
+  end
+
+  it "should convert class definitions" do
+    php("class Foo {}").should equal_ruby("class Foo; end")
+  end
+
+  it "should convert constant definition" do
+    php("define( 'MW_PARSER_VERSION', '1.6.1' )").should equal_ruby("MW_PARSER_VERSION = '1.6.1'")
+  end
+  
+  it "should convert arrays" do
+    php("array(1,2,'hello')").should equal_ruby("[1,2,'hello']")
+  end
+  
+  it "should convert an associative array" do
+    php("array('foo' => 'bar', 'spam' => 'eggs')").should equal_ruby("{'foo' => 'bar', 'spam' => 'eggs'}")
   end
 
 

@@ -26,6 +26,10 @@ class Java::ComCauchoQuercusExpr::FunctionExpr
   field_reader :_args => :args
 end
 
+class Java::ComCauchoQuercusExpr::ArrayFunExpr
+  field_reader :_keys => :keys, :_values => :values
+end
+
 class Java::ComCauchoQuercusProgram::TextStatement
   field_reader :_value => :value
 end
@@ -36,6 +40,10 @@ end
 
 class Java::ComCauchoQuercusProgram::ReturnStatement
   field_reader :_expr => :expr
+end
+
+class Java::ComCauchoQuercusProgram::ClassDefStatement
+  field_reader :_cl => :cl
 end
 
 module Php2Rb
@@ -57,7 +65,6 @@ class Converter
       return s(:block, *(functions(program) + [p(program.statement)]).compact )
     end
 
-
     def functions(program)
       program.functions.collect {|f| p(f) }
     end
@@ -70,9 +77,9 @@ class Converter
       send node_type(node), node
     end
 
-    def method_missing(method, node)
-      "called #{method} for #{node.java_class.name}"
-    end
+    # def method_missing(method, node)
+    #   "called #{method} for #{node.java_class.name}"
+    # end
 
     def echo_statement(node)
       s(:call, nil, :print, s(:arglist, p(node.expr)))
@@ -177,9 +184,48 @@ class Converter
       s(:return, p(node.expr))
     end
 
-    def function_expr(node)
-      s(:call, nil, node.name.to_sym, s(:arglist, *node.args.collect {|a| p(a) }) )
+    FUNCTION_OVERRIDES = {
+      :define => :define_constant
+    }
+
+    def define_constant(node)
+      args = node.args.to_a
+      name = args.first.value.value.to_sym
+      value = args.last
+      s(:cdecl, name, p(value))
     end
+
+    def function_expr(node)
+      name = node.name.to_sym
+      override = FUNCTION_OVERRIDES[name]
+      return send(override, node) if override
+      s(:call, nil, name, s(:arglist, *node.args.collect {|a| p(a) }) )
+    end
+
+    def append_expr(node)
+      return p(node.value) unless node.next
+      s(:call, p(node.value), :+, s(:arglist, p(node.next)))
+    end
+
+    def class_def_statement(node)
+      s(:class, node.cl.name.to_sym, nil, s(:scope))
+    end
+
+    def array_fun_expr(node)
+      keys = node.keys.to_a
+      values = node.values.to_a
+      return array(values) if keys.compact.length == 0
+      hash_literal(keys, values)
+    end
+
+    def array(values)
+      s(:array, *values.collect {|node| p(node)})
+    end
+
+    def hash_literal(keys, values)
+      s(:hash, *keys.zip(values).flatten.collect {|node| p(node)})
+    end
+
   end
 end
 
