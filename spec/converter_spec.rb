@@ -74,6 +74,11 @@ describe Php2Rb::Converter do
       "if x == 42 \n print('foo') \n else \n print('bar') \n end")
   end
 
+  it "should convert if/then" do
+    php("if ($x == 42) { echo('the meaning of life')}").should equal_ruby(
+      "print 'the meaning of life' if x == 42")
+  end
+
   it "should convert method definition" do
     php("function fun($x, $y) { echo('running function'); return $x + $y; }").should equal_ruby(
       "def fun(x, y) \n print('running function') \n return x + y \n end")
@@ -157,7 +162,7 @@ describe Php2Rb::Converter do
   it "should allow static method invocation" do
     php("Foo::bar('arg1', 2)").should equal_ruby("Foo.bar('arg1', 2)")
   end
-  
+
   it "should allow invoking methods in expressions" do
     php("foo(bar('spam'))").should equal_ruby("foo(bar('spam'))")
   end
@@ -173,25 +178,96 @@ describe Php2Rb::Converter do
   it "should convert accessing fields on $this to instance variables" do
     php("$this->foo").should equal_ruby("@foo")
   end
-  
+
   it "should convert calling methods on $this to self" do
     php("$this->spam()").should equal_ruby("self.spam")
   end
-  
+
   it "should convert 'not'" do
     php("!$foo").should equal_ruby("!foo")
   end
 
-  # TODO: resolve semantic differences here
-  it "should convert switch statements"# do
-  #   php(
-  #   "switch($i)
-  #     case 1:
-  #       echo('1');
-  #       break;
-  #     case 2:
-  #       echo('2');
-  #   ").should equal_ruby(
-  #   )
-  # end
+  # note: there are pretty big semantic differences between PHP's "switch" and
+  # Ruby's "case".  however, Quercus is nice enough to parse the case statement in a way
+  # that we can generate code that performs equivalently.  However, this approach may duplicating a lot of code.
+  # however, if the PHP is written without "break" or "return" statements then it's probably really ugly code anyways.
+  # generally, things should work out OK (knock on wood)
+  it "should convert switch statements" do
+    php(
+    "switch($i):
+      case 1:
+        echo('1');
+      case 2:
+        echo('2');
+        break;
+      case 3:
+        return 'foo';
+      default:
+        echo('default');
+      endswitch;
+    ").should equal_ruby("
+      case(i)
+      when 1
+        print '1'
+        print '2'
+      when 2
+        print '2'
+      when 3
+        return 'foo'
+      else
+        print 'default'
+      end
+    ")
+  end
+
+  it "should convert continue statements" do
+    php("foreach ($arr as $v) { continue; }").should equal_ruby(
+      "arr.each {|v| next }")
+  end
+
+  it "should convert continue statements that jump an extra loop out"
+
+  it "should convert &&" do
+    php("$a && b").should equal_ruby("a and b")
+  end
+
+  it "should convert ||" do
+    php("$a || $b").should equal_ruby("a or b")
+  end
+
+  it "should convert global statements to calls to the runtime" do
+    php("global $foo").should equal_ruby("php_global :foo")
+  end
+
+  it "should convert negative numbers" do
+    php("-5").should equal_ruby("-5")
+  end
+
+  it "should convert negative floats" do
+    php("-3.14").should equal_ruby("-3.14")
+  end
+
+  it "should support negativing variables" do
+    php("-$x").should equal_ruby("-x")
+  end
+
+  it "should convert while statements" do
+    php("while($var) { echo('yes!'); }").should equal_ruby(
+      "while var do
+        print 'yes!'
+      end")
+  end
+
+  it "should convert incrementing" do
+    php("$i++").should equal_ruby("i += 1")
+  end
+
+  it "should convert decrementing" do
+    php("$i--").should equal_ruby("i -= 1")
+  end
+
+  # TODO: resolve semantic issues here?
+  it "should convert === (strict equality)" do
+    php("$a === $b").should equal_ruby("a == b")
+  end
 end

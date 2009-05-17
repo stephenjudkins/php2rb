@@ -1,5 +1,6 @@
 $: << File.dirname(__FILE__)
 $: << File.expand_path(File.dirname(__FILE__) + '/../lib')
+require 'pp'
 
 def php(expr)
   Php2Rb::Converter.convert("<? #{expr} ?>")

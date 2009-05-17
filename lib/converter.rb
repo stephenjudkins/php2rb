@@ -35,7 +35,6 @@ class Converter
       parser = com.caucho.quercus.parser.QuercusParser.new quercus, path, read_stream
 
       program = parser.parse
-
       functions = functions(program)
       statement = p(program.statement)
       return statement if functions.length == 0
@@ -53,9 +52,10 @@ class Converter
     end
 
     def p(node, klass = nil, recursion = 0)
+      return nil unless node
       if @debug and node.respond_to? :location
         l = node.location
-        puts "parsing #{node_type(node)} (#{l.class_name}\##{l.function_name}) @ #{l.line_number}"
+        puts "#{node_type(node)} (#{l.class_name}\##{l.function_name}) @ #{l.line_number}"
       end
       klass ||= node.java_class
       type = node_class_name(klass)

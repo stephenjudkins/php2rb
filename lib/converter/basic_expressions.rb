@@ -32,5 +32,14 @@ module Php2Rb
       p(node.expr)
     end
 
+    def minus_expr(node)
+      if node_type(node.expr) == :var_expr
+        return s(:call, p(node.expr), :-@, s(:arglist))
+      end
+
+      return s(:lit, 0-p(node.expr.value))
+
+    end
+
   end
 end

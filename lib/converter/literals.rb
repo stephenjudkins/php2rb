@@ -40,7 +40,6 @@ module Php2Rb
       return p(value) if node_type(value) == :boolean_value
       s(:lit, p(value))
     end
-
-
+    2254
   end
 end

@@ -9,6 +9,9 @@ module Php2Rb
     Program::EchoStatement => [:expr],
     Program::TextStatement => [:value],
     Program::ForeachStatement => [:obj_expr, :block, :value],
+    Program::SwitchStatement => [:value, :cases, :blocks, :default_block],
+    Program::GlobalStatement => [:var],
+    Program::WhileStatement => [:test, :block],
     Expr::BinaryExpr => [:left, :right],
     Expr::AssignExpr => [:var, :value],
     Expr::AssignRefExpr => [:var, :value],
@@ -19,7 +22,8 @@ module Php2Rb
     Expr::ArrayGetExpr => [:expr, :index],
     Expr::MethodCallExpr => [:obj_expr, :args],
     Expr::ThisFieldExpr => [:name],
-    Expr::UnaryExpr => [:expr]
+    Expr::UnaryExpr => [:expr],
+    Expr::PostIncrementExpr => [:incr]
   }.each do |klass, keys|
     klass.instance_eval do
       keys.each do |key|

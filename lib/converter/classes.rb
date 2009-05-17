@@ -18,5 +18,8 @@ module Php2Rb
       s(:call, nil, :php_static_var, s(:arglist, s(:hash, s(:lit, :static), s(:true))))
     end
 
+    def global_statement(node)
+      s(:call, nil, :php_global, s(:arglist, s(:lit, node.var.name.to_sym)))
+    end
   end
 end
