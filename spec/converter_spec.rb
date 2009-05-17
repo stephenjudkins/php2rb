@@ -40,6 +40,17 @@ describe Php2Rb::Converter do
       php("3.14").should equal_ruby("3.14")
     end
 
+    it "should convert 'true'" do
+      php("true").should equal_ruby("true")
+    end
+
+    it "should convert 'false'" do
+      php("false").should equal_ruby("false")
+    end
+
+    it "should convert 'null'" do
+      php("null").should equal_ruby("nil")
+    end
   end
   it "should convert echoing a statement" do
     php("echo(1 + 2)").should equal_ruby("print(1 + 2)")
@@ -63,12 +74,12 @@ describe Php2Rb::Converter do
       "if x == 42 \n print('foo') \n else \n print('bar') \n end")
   end
 
-  it "should convert function definition" do
+  it "should convert method definition" do
     php("function fun($x, $y) { echo('running function'); return $x + $y; }").should equal_ruby(
       "def fun(x, y) \n print('running function') \n return x + y \n end")
   end
 
-  it "should convert function definition with default arguments" do
+  it "should convert method definition with default arguments" do
     php("function fun($x, $y = \"foo\") {return $x;}").should equal_ruby(
       "def fun(x, y='foo') \n return x \n end")
   end
@@ -93,7 +104,7 @@ describe Php2Rb::Converter do
 
   end
 
-  it "should convert function calls" do
+  it "should convert method calls" do
     php("foo(\"bar\", $spam);").should equal_ruby("foo('bar', spam)")
   end
 
@@ -105,17 +116,82 @@ describe Php2Rb::Converter do
     php("class Foo {}").should equal_ruby("class Foo; end")
   end
 
+  it "should convert methods with class definitions" do
+    php("class Foo { function bar() { return 'hello world';} }").should equal_ruby(
+      "class Foo \n def bar \n return 'hello world' \n end \n end")
+  end
+
   it "should convert constant definition" do
     php("define( 'MW_PARSER_VERSION', '1.6.1' )").should equal_ruby("MW_PARSER_VERSION = '1.6.1'")
   end
-  
+
   it "should convert arrays" do
     php("array(1,2,'hello')").should equal_ruby("[1,2,'hello']")
   end
-  
+
   it "should convert an associative array" do
     php("array('foo' => 'bar', 'spam' => 'eggs')").should equal_ruby("{'foo' => 'bar', 'spam' => 'eggs'}")
   end
 
+  it "should convert a foreach statement" do
+    php(
+    "foreach ($arr as $value) {
+       echo($value);
+    }").should equal_ruby(
+    "arr.each {|value| print(value) }")
+  end
 
+  it "should convert an array get" do
+    php("$foo['bar']").should equal_ruby("foo['bar']")
+  end
+
+  it "should assign to arrays" do
+    php("$foo['bar'] = 100").should equal_ruby("foo['bar'] = 100")
+  end
+
+  it "should allow static class methods" do
+    php(
+    "static $static = true").should equal_ruby("php_static_var :static => true")
+  end
+
+  it "should allow static method invocation" do
+    php("Foo::bar('arg1', 2)").should equal_ruby("Foo.bar('arg1', 2)")
+  end
+  
+  it "should allow invoking methods in expressions" do
+    php("foo(bar('spam'))").should equal_ruby("foo(bar('spam'))")
+  end
+
+  it "should parse isset for variables" do
+    php("isset($foo)").should equal_ruby("defined? foo")
+  end
+
+  it "should convert method calls on objects" do
+    php("$foo->bar()").should equal_ruby("foo.bar")
+  end
+
+  it "should convert accessing fields on $this to instance variables" do
+    php("$this->foo").should equal_ruby("@foo")
+  end
+  
+  it "should convert calling methods on $this to self" do
+    php("$this->spam()").should equal_ruby("self.spam")
+  end
+  
+  it "should convert 'not'" do
+    php("!$foo").should equal_ruby("!foo")
+  end
+
+  # TODO: resolve semantic differences here
+  it "should convert switch statements"# do
+  #   php(
+  #   "switch($i)
+  #     case 1:
+  #       echo('1');
+  #       break;
+  #     case 2:
+  #       echo('2');
+  #   ").should equal_ruby(
+  #   )
+  # end
 end

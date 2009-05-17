@@ -19,6 +19,7 @@ class EqualRuby
     @sexp_string = sexp.inspect
 
     @sexp = begin
+      # sexp
       normalize_sexp(sexp)
     rescue Exception
       nil
@@ -35,11 +36,14 @@ class EqualRuby
     rescue Exception => e
       return broken
     end
-    "expected '#{@ruby}' to be the same as '#{@expected_ruby}'"
+    "===expected===\n#{@ruby}\n===to be the same as===\n" +
+    "#{@expected_ruby}\n===ruby expectation produced===\n#{@expected_sexp.inspect}\n" +
+    "===php produced===\n#{@sexp_string}"
   end
   
   def broken
-    "couldn't parse #{@sexp_string}; '#{@ruby}' produced #{@expected_sexp.inspect}"
+    "===couldn't parse===\n" + 
+    "#{@sexp_string}\n===expected===\n#{@expected_sexp.inspect}"
   end
 end
 
