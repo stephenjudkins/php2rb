@@ -225,7 +225,37 @@ describe Php2Rb::Converter do
       "arr.each {|v| next }")
   end
 
-  it "should convert continue statements that jump an extra loop out"
+  describe "with continue statements jumping an extra loop out" do
+    it "should use special runtime forloops that allow for it" do
+      php(
+        "foreach ($a as $i) { foreach ($b as $j) { continue 2; }}"
+      ).should equal_ruby(
+        "Php2Rb.foreach(a) { |i| Php2Rb.foreach(b) { |j| Php2Rb.continue(2) } }"
+      )
+    end
+  end
+
+  describe "with break statements jumping an extra loop out" do
+    it "should use special runtime forloops that allow for it" do
+      php(
+        "foreach ($a as $i) { foreach ($b as $j) { break 2; }}"
+      ).should equal_ruby(
+        "Php2Rb.foreach(a) { |i| Php2Rb.foreach(b) { |j| Php2Rb.break(2) } }"
+      )
+    end
+  end
+
+  it "should convert a break statement without an argument" do
+    php("break;").should equal_ruby("break")
+  end
+
+  it "should convert a break statement with an argument" do
+    php("break 2;").should equal_ruby("Php2Rb.break 2")
+  end
+
+  it "should convert a continue statement that specifies an argument" do
+    php("continue 2").should equal_ruby("Php2Rb.continue 2")
+  end
 
   it "should convert &&" do
     php("$a && b").should equal_ruby("a and b")

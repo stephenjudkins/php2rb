@@ -51,8 +51,9 @@ class Converter
       klass.name.split(".").last.snake_case.to_sym
     end
 
-    def p(node, klass = nil, recursion = 0)
+    def p(node, visitors = [], klass = nil, recursion = 0)
       return nil unless node
+      visitors.each {|v| v.visit(node) }
       if @debug and node.respond_to? :location
         l = node.location
         puts "#{node_type(node)} (#{l.class_name}\##{l.function_name}) @ #{l.line_number}"
@@ -60,9 +61,12 @@ class Converter
       klass ||= node.java_class
       type = node_class_name(klass)
       raise "no matcher for #{node_type(node)}" if type == :object
-      return send type, node if respond_to? type
+      if respond_to? type
+        return send type, node if method(type).arity == 1
+        return send type, node, visitors if method(type).arity == 2
+      end
       # puts "recursing to #{node_class_name(klass.superclass)} "
-      p(node, klass.superclass, recursion + 1)
+      p(node, visitors, klass.superclass)
     end
 
     def echo_statement(node)

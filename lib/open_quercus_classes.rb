@@ -12,6 +12,8 @@ module Php2Rb
     Program::SwitchStatement => [:value, :cases, :blocks, :default_block],
     Program::GlobalStatement => [:var],
     Program::WhileStatement => [:test, :block],
+    Program::ContinueStatement => [:target],
+    Program::BreakStatement => [:target],
     Expr::BinaryExpr => [:left, :right],
     Expr::AssignExpr => [:var, :value],
     Expr::AssignRefExpr => [:var, :value],

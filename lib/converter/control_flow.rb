@@ -9,11 +9,31 @@ module Php2Rb
       )
     end
 
-    def foreach_statement(node)
+    class BreakOrContinueVisitor
+      attr_reader :jumps_out_of_loop
+
+      JUMP_STATEMENTS = [:continue_statement, :break_statement]
+      def visit(node)
+        type = Converter.node_type(node)
+        return unless JUMP_STATEMENTS.include? type
+        @jumps_out_of_loop = true if node.target
+      end
+    end
+
+    def foreach_statement(node, visitors)
+      visitor = BreakOrContinueVisitor.new
+
+      block = p(node.block, visitors + [visitor])
+
+      target = p(node.obj_expr)
+      call = visitor.jumps_out_of_loop ?
+        s(:call, s(:const, :Php2Rb), :foreach, s(:arglist, p(node.obj_expr))) :
+        s(:call, p(node.obj_expr), :each, s(:arglist))
+
       s(:iter,
-        s(:call, p(node.obj_expr), :each, s(:arglist)),
+        call,
         s(:lasgn, node.value.name.to_sym),
-        p(node.block)
+        block
       )
     end
 
@@ -21,9 +41,9 @@ module Php2Rb
       s(:return, p(node.expr))
     end
 
-    def block_statement(node)
+    def block_statement(node, visitors)
       return nil if node.statements.length == 0
-      s(:block, *node.statements.collect {|node| p(node)})
+      s(:block, *node.statements.collect {|node| p(node, visitors)})
     end
 
     def switch_statement(node)
@@ -45,7 +65,19 @@ module Php2Rb
     end
 
     def continue_statement(node)
-      s(:next)
+      if node.target
+        ruby_method :continue, s(:arglist, p(node.target)), s(:const, :Php2Rb)
+      else
+        s(:next)
+      end
+    end
+
+    def break_statement(node)
+      if node.target
+        ruby_method :break, s(:arglist, p(node.target)), s(:const, :Php2Rb)
+      else
+        s(:break)
+      end
     end
 
     def block_until_return_or_break(block)
