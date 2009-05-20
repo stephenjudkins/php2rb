@@ -162,6 +162,10 @@ describe Php2Rb::Converter do
     php("$foo['bar']").should equal_ruby("foo['bar']")
   end
 
+  it "should allow assigning to array double-gets (why, Quercus? why?)" do
+    php("$foo[1][2] = $var").should equal_ruby("foo[1][2] = var")
+  end
+
   it "should assign to arrays" do
     php("$foo['bar'] = 100").should equal_ruby("foo['bar'] = 100")
   end
@@ -353,9 +357,18 @@ describe Php2Rb::Converter do
     php("$i++").should equal_ruby("i += 1")
   end
 
+  it "should convert incrementing (with pre-var syntax)" do
+    php("++$i").should equal_ruby("i += 1")
+  end
+
   it "should convert decrementing" do
     php("$i--").should equal_ruby("i -= 1")
   end
+
+  it "should convert decrementing (with pre-var syntax)" do
+    php("--$i").should equal_ruby("i -= 1")
+  end
+
 
   # TODO: resolve semantic issues here?
   it "should convert === (strict equality)" do
@@ -393,4 +406,5 @@ describe Php2Rb::Converter do
   it "should support ternarys" do
     php("$x = $cond ? $a : $b").should equal_ruby("x = cond ? a : b")
   end
+
 end

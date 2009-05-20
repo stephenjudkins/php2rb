@@ -28,6 +28,7 @@ module Php2Rb
     Expr::ThisFieldExpr => [:name],
     Expr::UnaryExpr => [:expr],
     Expr::PostIncrementExpr => [:incr],
+    Expr::PreIncrementExpr => [:incr],
     Expr::CharAtExpr => [:obj_expr, :index_expr],
     Expr::NewExpr => [:name, :args],
     Expr::LongLiteralExpr => [:value],

@@ -12,7 +12,7 @@ module Php2Rb
 
     def assign_expr(node)
       type = node_type(node.var)
-      return array_assignment(node) if type == :array_get_expr
+      return array_assignment(node) if [:array_get_expr, :array_get_get_expr].include?(type)
       return char_assignment(node) if type == :char_at_expr
       return instance_assignment(node) if type == :this_field_expr
       s(:lasgn, node.var.name.to_sym, p(node.value))

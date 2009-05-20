@@ -47,5 +47,7 @@ module Php2Rb
       s(:lasgn, name, s(:call, s(:lvar, name), operator, s(:arglist, s(:lit, 1))))
     end
 
+    alias :pre_increment_expr :post_increment_expr
+
   end
 end
