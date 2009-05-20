@@ -43,6 +43,10 @@ class Converter
       return s(:block, functions, statement)
     end
 
+    def to_ruby(php)
+      Ruby2Ruby.new.process(convert(phps))
+    end
+
     def node_type(node)
       node_class_name(node.java_class)
     end

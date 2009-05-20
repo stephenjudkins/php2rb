@@ -35,6 +35,10 @@ module Php2Rb
       s(:nil)
     end
 
+    def long_literal_expr(node)
+      s(:lit, node.value)
+    end
+
     def literal_expr(node)
       value = node.value
       return p(value) if node_type(value) == :boolean_value

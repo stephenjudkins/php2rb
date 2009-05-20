@@ -1,11 +1,11 @@
 module Php2Rb
   module ControlFlow
 
-    def if_statement(node)
+    def if_statement(node, visitors)
       s(:if,
         p(node.test),
-        p(node.true_block),
-        p(node.false_block)
+        p(node.true_block, visitors),
+        p(node.false_block, visitors)
       )
     end
 
@@ -94,6 +94,25 @@ module Php2Rb
         p(node.block),
         true
       )
+    end
+
+    def for_statement(node)
+      s(:block,
+        p(node.init),
+        s(:while,
+          p(node.test),
+          s(:block, p(node.block), p(node.incr)),
+          true
+        )
+      )
+    end
+
+    def throw_statement(node)
+      s(:call, nil, :raise, s(:arglist, p(node.expr)))
+    end
+
+    def conditional_expr(node)
+       s(:if, p(node.test), p(node.true_expr), p(node.false_expr))
     end
   end
 end

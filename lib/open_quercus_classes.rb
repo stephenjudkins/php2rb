@@ -14,18 +14,25 @@ module Php2Rb
     Program::WhileStatement => [:test, :block],
     Program::ContinueStatement => [:target],
     Program::BreakStatement => [:target],
+    Program::ForStatement => [:init, :test, :incr, :block],
+    Program::ThrowStatement => [:expr],
     Expr::BinaryExpr => [:left, :right],
     Expr::AssignExpr => [:var, :value],
     Expr::AssignRefExpr => [:var, :value],
     Expr::StaticMethodExpr => [:class_name, :method_name, :fun, :args],
-    Expr::StringLiteralExpr => [:value], 
+    Expr::StringLiteralExpr => [:value],
     Expr::FunctionExpr => [:args],
     Expr::ArrayFunExpr => [:keys, :values],
     Expr::ArrayGetExpr => [:expr, :index],
     Expr::MethodCallExpr => [:obj_expr, :args],
     Expr::ThisFieldExpr => [:name],
     Expr::UnaryExpr => [:expr],
-    Expr::PostIncrementExpr => [:incr]
+    Expr::PostIncrementExpr => [:incr],
+    Expr::CharAtExpr => [:obj_expr, :index_expr],
+    Expr::NewExpr => [:name, :args],
+    Expr::LongLiteralExpr => [:value],
+    Expr::ConditionalExpr => [:test, :true_expr, :false_expr],
+    Expr::ThisFieldExpr => [:name]
   }.each do |klass, keys|
     klass.instance_eval do
       keys.each do |key|
@@ -37,3 +44,4 @@ module Php2Rb
   end
 
 end
+

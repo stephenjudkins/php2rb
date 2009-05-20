@@ -21,5 +21,9 @@ module Php2Rb
     def global_statement(node)
       s(:call, nil, :php_global, s(:arglist, s(:lit, node.var.name.to_sym)))
     end
+
+    def new_expr(node)
+      s(:call, s(:const, node.name.to_sym), :new, arguments(node.args))
+    end
   end
 end

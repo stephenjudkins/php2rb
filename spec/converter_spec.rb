@@ -107,6 +107,18 @@ describe Php2Rb::Converter do
       php("$x < 42").should equal_ruby("x < 42")
     end
 
+    it "should conver lte" do
+      php("$x <= 42").should equal_ruby("x <= 42")
+    end
+
+    it "should convert gte" do
+      php("$x >= 42").should equal_ruby("x >= 42")
+    end
+
+    it "should convert not equal" do
+      php("$x != $y").should equal_ruby("x != y")
+    end
+
   end
 
   it "should convert method calls" do
@@ -179,6 +191,10 @@ describe Php2Rb::Converter do
     php("$this->foo").should equal_ruby("@foo")
   end
 
+  it "should convert changing fields on $this to assigning instance vars" do
+    php("$this->foo = 'bar'").should equal_ruby("@foo = 'bar'")
+  end
+
   it "should convert calling methods on $this to self" do
     php("$this->spam()").should equal_ruby("self.spam")
   end
@@ -233,6 +249,15 @@ describe Php2Rb::Converter do
         "Php2Rb.foreach(a) { |i| Php2Rb.foreach(b) { |j| Php2Rb.continue(2) } }"
       )
     end
+
+    it "should use special loops even if it is nested in an 'if' statement" do
+      php(
+        "foreach ($a as $i) { foreach ($b as $j) { if ($j == 42) { continue 2; } }}"
+      ).should equal_ruby(
+        "Php2Rb.foreach(a) { |i| Php2Rb.foreach(b) { |j| Php2Rb.continue(2) if j == 42 } }"
+      )
+    end
+
   end
 
   describe "with break statements jumping an extra loop out" do
@@ -243,6 +268,25 @@ describe Php2Rb::Converter do
         "Php2Rb.foreach(a) { |i| Php2Rb.foreach(b) { |j| Php2Rb.break(2) } }"
       )
     end
+    it "should use special loops even if it is nested in an 'if' statement" do
+      php(
+        "foreach ($a as $i) { foreach ($b as $j) { if ($j == 42) { break 2; } }}"
+      ).should equal_ruby(
+        "Php2Rb.foreach(a) { |i| Php2Rb.foreach(b) { |j| Php2Rb.break(2) if j == 42 } }"
+      )
+    end
+  end
+
+  it "should convert for loops" do
+    php(
+      "for( $i = 1; $i <= $toclevel; $i++ ) { echo($i); } ").
+    should equal_ruby(
+      "i = 1
+       while i <= toclevel do
+         print i
+         i += 1
+       end
+      ")
   end
 
   it "should convert a break statement without an argument" do
@@ -264,6 +308,23 @@ describe Php2Rb::Converter do
   it "should convert ||" do
     php("$a || $b").should equal_ruby("a or b")
   end
+
+  it "should convert bitwise and" do
+    php("$a & $b").should equal_ruby("a & b")
+  end
+
+  it "should convert bitwise xor" do
+    php("$a ^ $b").should equal_ruby("a ^ b")
+  end
+
+  it "should convert bitwise not" do
+    php("( ~ $b )").should equal_ruby("(~ b)")
+  end
+
+  it "should convert bitwise or" do
+    php("$a | $b").should equal_ruby("a | b")
+  end
+
 
   it "should convert global statements to calls to the runtime" do
     php("global $foo").should equal_ruby("php_global :foo")
@@ -299,5 +360,37 @@ describe Php2Rb::Converter do
   # TODO: resolve semantic issues here?
   it "should convert === (strict equality)" do
     php("$a === $b").should equal_ruby("a == b")
+  end
+
+  it "should support getting characters out of strings" do
+    php("$s{42}").should equal_ruby("s[42..42]")
+  end
+
+  it "should support getting characters out of strings with a var index" do
+    php("$s{$i}").should equal_ruby("s[i..i]")
+  end
+
+  it "should support setting characters in a string" do
+    php("$s{42} = 'x'").should equal_ruby("s[42..42] = 'x'")
+  end
+
+  it "shoulds support raising exceptions" do
+    php(
+      "throw new MWException( 'why am i programming in this awful language?' )").
+    should equal_ruby(
+      "raise MWException.new('why am i programming in this awful language?')")
+  end
+
+  it "should support initialization of objects" do
+    php("$x = new Foo('arg1')").should equal_ruby("x = Foo.new('arg1')")
+  end
+
+  it "should convert string interpolation" do
+    # yuck! oh well.
+    php('"[[$m[1]\\1$m[2]|\\1]]"').should equal_ruby('("[[" + (m[1] + ("\001" + (m[2] + "|\001]]"))))')
+  end
+
+  it "should support ternarys" do
+    php("$x = $cond ? $a : $b").should equal_ruby("x = cond ? a : b")
   end
 end

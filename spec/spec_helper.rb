@@ -9,7 +9,7 @@ end
 def equal_ruby(ruby)
   EqualRuby.new(ruby)
 end
-  
+
 class EqualRuby
   def initialize(ruby)
     @ruby = ruby
@@ -20,10 +20,10 @@ class EqualRuby
     @sexp_string = sexp.inspect
 
     @sexp = begin
-      # sexp
       normalize_sexp(sexp)
-    rescue Exception
-      nil
+    rescue Exception => e
+      # oh no!  the RubyParser is a bit flaky. it also destructively eats up the generated sexp.
+      eval(@sexp_string)
     end
 
     @sexp == @expected_sexp
@@ -35,16 +35,20 @@ class EqualRuby
     begin
       @expected_ruby = Ruby2Ruby.new.process(@sexp)
     rescue Exception => e
+      @e = e
       return broken
     end
     "===expected===\n#{@ruby}\n===to be the same as===\n" +
     "#{@expected_ruby}\n===ruby expectation produced===\n#{@expected_sexp.inspect}\n" +
     "===php produced===\n#{@sexp_string}"
   end
-  
+
   def broken
-    "===couldn't parse===\n" + 
-    "#{@sexp_string}\n===expected===\n#{@expected_sexp.inspect}"
+    m = "===couldn't parse===\n" +
+    "#{@sexp_string}\n===expected===\n#{@expected_sexp.inspect}\n"
+    m += "===exception===\n#{@e.message}\n#{@e.backtrace}" if @e
+
+    m
   end
 end
 
