@@ -77,8 +77,16 @@ class Converter
       s(:call, nil, :print, s(:arglist, p(node.expr)))
     end
 
+    RESERVED_WORDS = ['do', 'end', 'begin', 'rescue']
+
+    def safe_keyword(name)
+      name = name.to_s.to_sym
+      name = :"_#{name}" if RESERVED_WORDS.include? name.to_s
+      name
+    end
+
     def ruby_var(name)
-      s(:call, nil, name.to_sym, s(:arglist))
+      s(:call, nil, safe_keyword(name), s(:arglist))
     end
 
     def text_statement(node)

@@ -124,6 +124,21 @@ describe Php2Rb::Converter do
     php("class Foo {}").should equal_ruby("class Foo; end")
   end
 
+  it "should convert class definitions with inheritance" do
+    php("class MyClass extends ThatClass {}").should equal_ruby("class MyClass < ThatClass; end")
+  end
+
+  it "should convert field definitions in a class def" do
+    php(
+      "class ThingO { var $a, $b, $c; }").
+    should equal_ruby(
+      "class ThingO
+        attr_accessor :a
+        attr_accessor :b
+        attr_accessor :c
+      end")
+  end
+
   it "should convert methods with class definitions" do
     php("class Foo { function bar() { return 'hello world';} }").should equal_ruby(
       "class Foo \n def bar \n return 'hello world' \n end \n end")
@@ -443,5 +458,21 @@ describe Php2Rb::Converter do
     php("@doSomething()").should equal_ruby("begin \n doSomething \n rescue Exception \n end")
   end
 
+  describe "mangling reserved words" do
+    ["begin", "end", "do", "rescue"].each do |kw|
+      it "should mangle #{kw} in expressions" do
+        php("$#{kw}").should equal_ruby("_#{kw}")
+      end
+
+      it "should mangle #{kw} in assignments" do
+        php("$#{kw} = 2").should equal_ruby("_#{kw} = 2")
+      end
+
+      it "should mangle #{kw} in members of objects" do
+        php("$thing->#{kw}").should equal_ruby("thing._#{kw}")
+      end
+
+    end
+  end
 
 end

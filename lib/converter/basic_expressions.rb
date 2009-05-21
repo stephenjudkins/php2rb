@@ -17,7 +17,7 @@ module Php2Rb
       return instance_assignment(node) if type == :this_field_expr
       return append_array(node) if type == :array_tail_expr
       return field_assign(node) if type == :field_get_expr
-      s(:lasgn, node.var.name.to_sym, p(node.value))
+      s(:lasgn, safe_keyword(node.var.name), p(node.value))
     end
 
     def append_array(node)
@@ -44,7 +44,8 @@ module Php2Rb
     end
 
     def var_expr(node)
-      ruby_var node.name
+      name = node.name
+      ruby_var name
     end
 
     def ref_expr(node)

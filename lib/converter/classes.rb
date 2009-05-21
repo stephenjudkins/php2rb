@@ -2,8 +2,16 @@ module Php2Rb
   module Classes
     def class_def_statement(node)
       klass = node.cl
-      functions = klass.function_set.collect {|f| f.value }.sort_by {|f| f.location.line_number }
-      s(:class, klass.name.to_sym, nil, s(:scope, s(:block, *functions.collect {|f| p(f)})) )
+      extends = klass.parent_name
+      extends = s(:const, extends.to_sym) if extends
+      functions = klass.function_set.collect {|f| f.value }.sort_by {|f| f.location.line_number }.
+                    collect {|f| p(f)}
+
+      fields = klass.field_set.collect {|e| e.key.to_s.to_sym }.
+                     collect {|f| s(:call, nil, :attr_accessor, s(:arglist, s(:lit, f)) ) }
+
+      contents = s(:scope, s(:block, *(fields + functions)))
+      s(:class, klass.name.to_sym, extends, contents )
     end
 
     def this_expr(node)
@@ -27,7 +35,7 @@ module Php2Rb
     end
 
     def field_get_expr(node)
-      ruby_method node.name.to_s.to_sym, s(:arglist), p(node.obj_expr)
+      ruby_method safe_keyword(node.name), s(:arglist), p(node.obj_expr)
     end
 
     def field_assign(node)
