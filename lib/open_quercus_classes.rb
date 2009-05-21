@@ -5,6 +5,7 @@ module Php2Rb
   {
     Program::Function => [:statement],
     Program::ReturnStatement => [:expr],
+    Program::ReturnRefStatement => [:expr],
     Program::ClassDefStatement => [:cl],
     Program::EchoStatement => [:expr],
     Program::TextStatement => [:value],
@@ -33,7 +34,14 @@ module Php2Rb
     Expr::NewExpr => [:name, :args],
     Expr::LongLiteralExpr => [:value],
     Expr::ConditionalExpr => [:test, :true_expr, :false_expr],
-    Expr::ThisFieldExpr => [:name]
+    Expr::ThisFieldExpr => [:name],
+    Expr::ArrayTailExpr => [:expr],
+    Expr::FieldGetExpr => [:obj_expr, :name],
+    Expr::UnsetVarExpr => [:var],
+    Expr::ListHeadExpr => [:var_list, :key_list],
+    Expr::ListExpr => [:list_head, :value],
+    Expr::ClassMethodExpr => [:name, :args],
+    Expr::InstanceOfExpr => [:right]
   }.each do |klass, keys|
     klass.instance_eval do
       keys.each do |key|

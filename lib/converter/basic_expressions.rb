@@ -15,7 +15,14 @@ module Php2Rb
       return array_assignment(node) if [:array_get_expr, :array_get_get_expr].include?(type)
       return char_assignment(node) if type == :char_at_expr
       return instance_assignment(node) if type == :this_field_expr
+      return append_array(node) if type == :array_tail_expr
+      return field_assign(node) if type == :field_get_expr
       s(:lasgn, node.var.name.to_sym, p(node.value))
+    end
+
+    def append_array(node)
+      ruby_method :<<, s(:arglist, p(node.value)), p(node.var.expr)
+      # s(:call, s(:call, nil, :stack, s(:arglist)), :<<, s(:arglist, s(:call, nil, :val, s(:arglist))))
     end
 
     def instance_assignment(node)
@@ -29,9 +36,6 @@ module Php2Rb
 
     def char_assignment(node)
       char_at = node.var
-      # puts "1: #{p(char_at.obj_expr).inspect}"
-      # puts "2: #{p(char_at_args(char_at)).inspect}"
-      # puts "3: #{p(node.value).inspect}"
       s(:attrasgn, p(char_at.obj_expr), :[]=, s(:arglist, char_at_args(char_at), p(node.value)))
     end
 
@@ -43,20 +47,24 @@ module Php2Rb
       ruby_var node.name
     end
 
+    def ref_expr(node)
+      p(node.expr)
+    end
+    # alias :ref_expr :var_expr
+
     def expr_statement(node)
       p(node.expr)
     end
 
     def minus_expr(node)
-      if node_type(node.expr) == :var_expr
-        return s(:call, p(node.expr), :-@, s(:arglist))
-      end
+      type = node_type(node.expr)
 
-      return s(:lit, 0-p(node.expr.value))
-
+      return s(:lit, 0-p(node.expr.value)) if type == :literal_expr
+      s(:call, p(node.expr), :-@, s(:arglist))
     end
 
     def char_at_expr(node)
+      # return ruby_method :omg
       args = char_at_args(node)
       s(:call,
         p(node.obj_expr),
@@ -70,10 +78,25 @@ module Php2Rb
         i = node.index_expr.value.toJavaObject
         return s(:lit, i..i)
       else
-        index = p(node.index_expr)
-        return s(:dot2, index, index)
+        return s(:dot2, p(node.index_expr), p(node.index_expr))
       end
     end
 
+    def to_long_expr(node)
+      ruby_method :to_i, s(:arglist), p(node.expr)
+    end
+
+    def unset_var_expr(node)
+      raise "how?" unless node_type(node.var) == :array_get_expr
+
+      ruby_method :delete, p(node.var.index), p(node.var.expr)
+    end
+
+    def list_expr(node)
+      # s(:masgn, s(:array, s(:lasgn, :element), s(:lasgn, :content), s(:lasgn, :params), s(:lasgn, :tags)), s(:splat, s(:call, nil, :data, s(:arglist))))
+      refs = node.list_head.var_list.collect {|k| s(:lasgn, k.name.to_sym) }
+      s(:masgn, s(:array, *refs), s(:splat, p(node.value)))
+      # list_expr
+    end
   end
 end

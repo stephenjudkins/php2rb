@@ -41,6 +41,8 @@ module Php2Rb
       s(:return, p(node.expr))
     end
 
+    alias :return_ref_statement :return_statement
+
     def block_statement(node, visitors)
       return nil if node.statements.length == 0
       s(:block, *node.statements.collect {|node| p(node, visitors)})
@@ -113,6 +115,10 @@ module Php2Rb
 
     def conditional_expr(node)
        s(:if, p(node.test), p(node.true_expr), p(node.false_expr))
+    end
+
+    def suppress_error_expr(node)
+      s(:rescue, p(node.expr), s(:resbody, s(:array, s(:const, :Exception)), nil))
     end
   end
 end

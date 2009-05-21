@@ -5,20 +5,10 @@ require 'converter'
 describe Php2Rb::Converter do
 
   describe "with arithmetic expressions" do
-    it "should convert +" do
-      php("1 + 2").should equal_ruby("1 + 2")
-    end
-
-    it "should convert -" do
-      php("1 - 2").should equal_ruby("1 - 2")
-    end
-
-    it "should convert *" do
-      php("1 * 2").should equal_ruby("1 * 2")
-    end
-
-    it "should convert /" do
-      php("1 / 2").should equal_ruby("1 / 2")
+    ["+", "-", "*", "/", "%"].each do |op|
+      it "should convert #{op}" do
+        php("1 #{op} 2").should equal_ruby("1 #{op} 2")
+      end
     end
 
     it "should convert nested expressions" do
@@ -95,30 +85,31 @@ describe Php2Rb::Converter do
   end
 
   describe "with boolean expressions" do
-    it "should convert equality checks" do
-      php("$x == 42").should equal_ruby("x == 42")
+
+    ["==", ">", "<", ">=", "<=", "!=", "&", "^", "|", "&&", "||"].each do |op|
+      it "should convert #{op}" do
+        php("1 #{op} 2").should equal_ruby("1 #{op} 2")
+      end
     end
 
-    it "should convert gt" do
-      php("$x > 42").should equal_ruby("x > 42")
+    it "should convert xor" do
+      php("a xor b").should equal_ruby("a ^ b")
     end
-
-    it "should convert lt" do
-      php("$x < 42").should equal_ruby("x < 42")
-    end
-
-    it "should conver lte" do
-      php("$x <= 42").should equal_ruby("x <= 42")
-    end
-
-    it "should convert gte" do
-      php("$x >= 42").should equal_ruby("x >= 42")
-    end
-
-    it "should convert not equal" do
-      php("$x != $y").should equal_ruby("x != y")
-    end
-
+    # it "should convert bitwise and" do
+    #   php("$a & $b").should equal_ruby("a & b")
+    # end
+    #
+    # it "should convert bitwise xor" do
+    #   php("$a ^ $b").should equal_ruby("a ^ b")
+    # end
+    #
+    # it "should convert bitwise not" do
+    #   php("( ~ $b )").should equal_ruby("(~ b)")
+    # end
+    #
+    # it "should convert bitwise or" do
+    #   php("$a | $b").should equal_ruby("a | b")
+    # end
   end
 
   it "should convert method calls" do
@@ -136,6 +127,18 @@ describe Php2Rb::Converter do
   it "should convert methods with class definitions" do
     php("class Foo { function bar() { return 'hello world';} }").should equal_ruby(
       "class Foo \n def bar \n return 'hello world' \n end \n end")
+  end
+
+  # the only way I can determine the order of these functions is line number.
+  it "should convert classes with multiple methods" do
+    php("class Foo {
+          function bar() { return 'hello world';}
+          function spam() { return 'eggs'; }
+        }").should equal_ruby(
+      "class Foo
+        def bar; return 'hello world'; end
+        def spam; return 'eggs'; end
+      end")
   end
 
   it "should convert constant definition" do
@@ -305,31 +308,6 @@ describe Php2Rb::Converter do
     php("continue 2").should equal_ruby("Php2Rb.continue 2")
   end
 
-  it "should convert &&" do
-    php("$a && b").should equal_ruby("a and b")
-  end
-
-  it "should convert ||" do
-    php("$a || $b").should equal_ruby("a or b")
-  end
-
-  it "should convert bitwise and" do
-    php("$a & $b").should equal_ruby("a & b")
-  end
-
-  it "should convert bitwise xor" do
-    php("$a ^ $b").should equal_ruby("a ^ b")
-  end
-
-  it "should convert bitwise not" do
-    php("( ~ $b )").should equal_ruby("(~ b)")
-  end
-
-  it "should convert bitwise or" do
-    php("$a | $b").should equal_ruby("a | b")
-  end
-
-
   it "should convert global statements to calls to the runtime" do
     php("global $foo").should equal_ruby("php_global :foo")
   end
@@ -344,6 +322,10 @@ describe Php2Rb::Converter do
 
   it "should support negativing variables" do
     php("-$x").should equal_ruby("-x")
+  end
+
+  it "should support negativing expressions" do
+    php("-fooMeth($m[0][0])").should equal_ruby("-fooMeth(m[0][0])")
   end
 
   it "should convert while statements" do
@@ -367,6 +349,14 @@ describe Php2Rb::Converter do
 
   it "should convert decrementing (with pre-var syntax)" do
     php("--$i").should equal_ruby("i -= 1")
+  end
+
+  it "should support decrementing with elements in an array" do
+    php("--$piece['count']").should equal_ruby("piece['count'] -= 1")
+  end
+
+  it "should support incrementing on instance methods" do
+    php("++$this->mAutonumber").should equal_ruby("@mAutonumber += 1")
   end
 
 
@@ -406,5 +396,52 @@ describe Php2Rb::Converter do
   it "should support ternarys" do
     php("$x = $cond ? $a : $b").should equal_ruby("x = cond ? a : b")
   end
+
+  it "should convert appending to an array" do
+    php("$stack[] = $val").should equal_ruby("stack << val")
+  end
+
+  it "should do something with refs, maybe." do
+    php("function &getTitle() { return $title; }").should equal_ruby("def getTitle \n return title \n end")
+  end
+
+  it "should support casting to int" do
+    php("(int)$var").should equal_ruby("var.to_i")
+  end
+
+  it "should support assigning fields on an object" do
+    php("$foo->mContainsOldMagic = true").should equal_ruby("foo.mContainsOldMagic = true")
+  end
+
+  it "should support getting fields on an object" do
+    php("$foo->mContainsOldMagic").should equal_ruby("foo.mContainsOldMagic")
+  end
+
+  it "should support removing elements from a hash" do
+    php("unset ( $elements[$k] )").should equal_ruby("elements.delete k")
+  end
+
+  it "should convert unpacking a list" do
+    php(
+      "list( $element, $content, $params, $tag ) = $data;"
+    ).should equal_ruby(
+      "element, content, params, tag = *data")
+  end
+
+  it "should convert class static method calls on self" do
+    php(
+      "class Foo { function bar() {self::createAssocArgs($args); } }").
+    should equal_ruby(
+      "class Foo \n def bar \n self.class.createAssocArgs(args) \n end \ end")
+  end
+
+  it "should convert instanceof" do
+    php("$wgTitle instanceof FakeTitle").should equal_ruby("wgTitle.is_a? FakeTitle")
+  end
+
+  it "should convert error supression into begin..rescue" do
+    php("@doSomething()").should equal_ruby("begin \n doSomething \n rescue Exception \n end")
+  end
+
 
 end

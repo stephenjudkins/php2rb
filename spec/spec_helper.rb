@@ -19,11 +19,10 @@ class EqualRuby
   def matches?(sexp)
     @sexp_string = sexp.inspect
 
-    @sexp = begin
-      normalize_sexp(sexp)
+    begin
+      @sexp = normalize_sexp(sexp)
     rescue Exception => e
-      # oh no!  the RubyParser is a bit flaky. it also destructively eats up the generated sexp.
-      eval(@sexp_string)
+      @e = e
     end
 
     @sexp == @expected_sexp
@@ -53,5 +52,7 @@ class EqualRuby
 end
 
 def normalize_sexp(sexp)
-  RubyParser.new.process(Ruby2Ruby.new.process(sexp))
+  ruby = Ruby2Ruby.new.process(sexp)
+  # puts ruby.inspect
+  RubyParser.new.process(ruby)
 end
