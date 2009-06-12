@@ -30,9 +30,15 @@ module Php2Rb
         s(:call, s(:const, :Php2Rb), :foreach, s(:arglist, p(node.obj_expr))) :
         s(:call, p(node.obj_expr), :each, s(:arglist))
 
+      block_args = if node.key
+        s(:masgn, s(:array, s(:lasgn, node.key.name.to_sym), s(:lasgn, node.value.name.to_sym)))
+      else
+        s(:lasgn, node.value.name.to_sym)
+      end
+
       s(:iter,
         call,
-        s(:lasgn, node.value.name.to_sym),
+        block_args,
         block
       )
     end
@@ -44,7 +50,7 @@ module Php2Rb
     alias :return_ref_statement :return_statement
 
     def block_statement(node, visitors)
-      return nil if node.statements.length == 0
+      return s(:block, s(:nil)) if node.statements.length == 0
       s(:block, *node.statements.collect {|node| p(node, visitors)})
     end
 

@@ -80,9 +80,9 @@ class Converter
     RESERVED_WORDS = ['do', 'end', 'begin', 'rescue']
 
     def safe_keyword(name)
-      name = name.to_s.to_sym
-      name = :"_#{name}" if RESERVED_WORDS.include? name.to_s
-      name
+      name = name.to_s
+      name = :"_#{name}" if RESERVED_WORDS.include? name
+      name.to_sym
     end
 
     def ruby_var(name)

@@ -56,3 +56,9 @@ def normalize_sexp(sexp)
   # puts ruby.inspect
   RubyParser.new.process(ruby)
 end
+
+require 'erb'
+
+def dbg(obj)
+  puts ERB::Util.h(obj.inspect)
+end

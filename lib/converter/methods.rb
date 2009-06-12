@@ -16,7 +16,7 @@ module Php2Rb
 
     def function(node)
       s(:defn,
-        node.name.to_sym,
+        safe_keyword(node.name),
         s(:args, *node.args.inject([]) {|m, arg| m += p(arg); m } ),
         s(:scope, p(node.statement))
       )
@@ -26,7 +26,7 @@ module Php2Rb
       name = node.name.to_sym
       override = FUNCTION_OVERRIDES[name]
       return send(override, node) if override
-      s(:call, nil, name, arguments(node.args) )
+      ruby_method name, arguments(node.args)
     end
 
     def static_method_expr(node)
@@ -42,7 +42,7 @@ module Php2Rb
     end
 
     def ruby_method(method_name, args=s(:arglist), target=nil)
-      s(:call, target, method_name.to_sym, args)
+      s(:call, target, safe_keyword(method_name), args)
     end
 
     def arguments(args)

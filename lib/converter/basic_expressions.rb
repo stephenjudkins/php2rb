@@ -99,5 +99,14 @@ module Php2Rb
       s(:masgn, s(:array, *refs), s(:splat, p(node.value)))
       # list_expr
     end
+
+    def include_once_expr(node)
+      arg = if node_type(node.expr) == :string_literal_expr
+        s(:str, node.expr.value.value.gsub(/\.php$/, ""))
+      else
+        p(node)
+      end
+      s(:call, nil, :require, s(:arglist, arg))
+    end
   end
 end

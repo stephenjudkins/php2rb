@@ -9,7 +9,7 @@ module Php2Rb
     Program::ClassDefStatement => [:cl],
     Program::EchoStatement => [:expr],
     Program::TextStatement => [:value],
-    Program::ForeachStatement => [:obj_expr, :block, :value],
+    Program::ForeachStatement => [:obj_expr, :block, :value, :key],
     Program::SwitchStatement => [:value, :cases, :blocks, :default_block],
     Program::GlobalStatement => [:var],
     Program::WhileStatement => [:test, :block],

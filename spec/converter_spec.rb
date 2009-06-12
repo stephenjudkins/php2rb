@@ -79,6 +79,10 @@ describe Php2Rb::Converter do
       "def fun(x, y='foo') \n return x \n end")
   end
 
+  it "should convert method definition with no block" do
+    php("function fun() {}").should equal_ruby("def fun; end")
+  end
+
   it "should convert block statements" do
     php("echo('hello '); \n echo('world');").should equal_ruby(
       "print('hello ')\nprint('world')")
@@ -174,6 +178,13 @@ describe Php2Rb::Converter do
        echo($value);
     }").should equal_ruby(
     "arr.each {|value| print(value) }")
+  end
+
+  it "should convert a foreach over an associative array" do
+    php(
+      "foreach($scores as $key => $score) { echo($key)}").
+    should equal_ruby(
+      "scores.each {|key, score| print(key)}")
   end
 
   it "should convert an array get" do
@@ -458,8 +469,10 @@ describe Php2Rb::Converter do
     php("@doSomething()").should equal_ruby("begin \n doSomething \n rescue Exception \n end")
   end
 
+  RESERVED_WORDS = ["begin", "end", "rescue"]
+  RESERVED_WORDS_WITHOUT_METHODS = RESERVED_WORDS + ['do']
   describe "mangling reserved words" do
-    ["begin", "end", "do", "rescue"].each do |kw|
+    RESERVED_WORDS_WITHOUT_METHODS.each do |kw|
       it "should mangle #{kw} in expressions" do
         php("$#{kw}").should equal_ruby("_#{kw}")
       end
@@ -472,7 +485,20 @@ describe Php2Rb::Converter do
         php("$thing->#{kw}").should equal_ruby("thing._#{kw}")
       end
 
+      it "should mangle #{kw} in method definition" do
+        php("function #{kw}() { echo('hello'); }").should equal_ruby("def _#{kw} \n print('hello') \n end")
+      end
     end
+
+    RESERVED_WORDS.each do |kw|
+      it "should mangle #{kw} in method invocation" do
+        php("#{kw}()").should equal_ruby("_#{kw}")
+      end
+    end
+
   end
 
+  it "should convert require_once" do
+    php("require_once('includes/SkinTemplate.php')").should equal_ruby("require 'includes/SkinTemplate'")
+  end
 end
