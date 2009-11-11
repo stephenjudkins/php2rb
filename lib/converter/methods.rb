@@ -41,8 +41,9 @@ module Php2Rb
       ruby_method node.name, arguments(node.args), p(node.obj_expr)
     end
 
-    def ruby_method(method_name, args=s(:arglist), target=nil)
-      s(:call, target, safe_keyword(method_name), args)
+    def ruby_method(method_name, args=s(:arglist), target=nil, mangle = true)
+      name = mangle ? safe_keyword(method_name) : method_name.to_sym
+      s(:call, target, name, args)
     end
 
     def arguments(args)

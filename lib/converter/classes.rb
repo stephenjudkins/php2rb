@@ -46,7 +46,7 @@ module Php2Rb
     end
 
     def class_method_expr(node)
-      klass = ruby_method :class, s(:arglist), s(:self)
+      klass = ruby_method :class, s(:arglist), s(:self), false
       ruby_method node.name, arguments(node.args), klass
     end
 

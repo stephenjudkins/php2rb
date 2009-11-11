@@ -77,11 +77,11 @@ class Converter
       s(:call, nil, :print, s(:arglist, p(node.expr)))
     end
 
-    RESERVED_WORDS = ['do', 'end', 'begin', 'rescue']
+    RESERVED_WORDS = ['do', 'end', 'begin', 'rescue', 'class']
 
     def safe_keyword(name)
       name = name.to_s
-      name = :"_#{name}" if RESERVED_WORDS.include? name
+      name = :"_#{name}" if RESERVED_WORDS.include? name or name[0..0] != name[0..0].downcase
       name.to_sym
     end
 
@@ -102,6 +102,15 @@ class Converter
 
     def assign_ref_expr(node)
       assign_expr(node)
+    end
+    
+    class ConverterError < Exception; end
+    def raise_error(node, cause)
+      if node.respond_to?(:location)
+        l = node.location
+        raise ConverterError.new("#{cause}: at #{l.class_name}\##{l.function_name} @ #{l.line_number}")
+      end
+      raise ConverterError.new(cause)
     end
 
   end

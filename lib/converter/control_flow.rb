@@ -56,10 +56,11 @@ module Php2Rb
 
     def switch_statement(node)
       target = p(node.value)
-      default = p(node.default_block)
+      body = switch_whens(node)
+      default = node.default_block ? [p(node.default_block)] : []
       s(:case,
         target,
-        *(switch_whens(node) + [default])
+        *(body + default)
        )
     end
 
@@ -105,13 +106,30 @@ module Php2Rb
     end
 
     def for_statement(node)
+      init, block = if node_type(node.incr) == :comma_expr
+        [s(:block, p(node.init), p(node.incr.right)),
+         s(:block, p(node.incr.left), p(node.incr.right), p(node.block))]
+      else
+         [p(node.init), s(:block, p(node.block), p(node.incr))]
+      end
+
       s(:block,
-        p(node.init),
+        init,
         s(:while,
           p(node.test),
-          s(:block, p(node.block), p(node.incr)),
+          block,
           true
         )
+      )
+    end
+
+    def do_statement(node)
+      s(:iter,
+        s(:call, nil, :loop, s(:arglist)),
+        nil,
+        s(:block, 
+          p(node.block), 
+          s(:if, p(node.test), nil, s(:break)))
       )
     end
 

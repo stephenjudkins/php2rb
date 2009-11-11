@@ -32,7 +32,21 @@ describe Php2Rb, "runtime" do
       @log.should == [[1, 1], [1,2]]
     end
   end
-
+  
+  describe "casting to boolean" do
+    [0, 0.0, "", "0", [], nil].each do |object|
+      it "should case #{object.inspect} to false" do
+        Php2Rb.to_bool(object).should == false
+      end
+    end
+    
+    [true, "foo", 1, 1.5].each do |object|
+      it "should convert #{object.inspect} to true" do
+        Php2Rb.to_bool(object).should == true
+      end
+    end
+  end
+  
   describe "with switch statements" do
     it "should support basic recursion"
   end

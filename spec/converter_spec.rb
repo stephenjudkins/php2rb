@@ -269,6 +269,16 @@ describe Php2Rb::Converter do
     ")
   end
 
+  it "should convert switch statements without a default, without adding comments in" do
+    sexp = php(
+    "switch($i):
+      case 1: echo('1'); break;
+      case 2: echo('2');
+     endswitch;")
+
+     Ruby2Ruby.new.process(sexp).should_not =~ /do nothing/
+  end
+
   it "should convert continue statements" do
     php("foreach ($arr as $v) { continue; }").should equal_ruby(
       "arr.each {|v| next }")
@@ -322,6 +332,19 @@ describe Php2Rb::Converter do
       ")
   end
 
+  it "should convert stupid for loops with commas" do
+    php(
+      "for ( ; $line !== false; $a->next(), $line = $a->current() ) { doIt(); }"
+    ).should equal_ruby("
+      line = a.current
+      while line != false do
+        a.next
+        line = a.current
+        doIt
+      end
+    ")
+  end
+
   it "should convert a break statement without an argument" do
     php("break;").should equal_ruby("break")
   end
@@ -359,6 +382,12 @@ describe Php2Rb::Converter do
       "while var do
         print 'yes!'
       end")
+  end
+
+  it "should convert do-while statements" do
+    php("do { foo(); bar(); } while($spam)").should equal_ruby(
+    "loop { foo; bar; break unless spam }"
+    )
   end
 
   it "should convert incrementing" do
@@ -435,6 +464,14 @@ describe Php2Rb::Converter do
     php("(int)$var").should equal_ruby("var.to_i")
   end
 
+  it "should cast to boolean using runtime" do
+    php("(bool)$var").should equal_ruby("Php2Rb.to_bool(var)")
+  end
+  
+  it "should support casting to array" do
+    php("(array)$foo").should equal_ruby("foo.to_a")
+  end
+
   it "should support assigning fields on an object" do
     php("$foo->mContainsOldMagic = true").should equal_ruby("foo.mContainsOldMagic = true")
   end
@@ -445,6 +482,14 @@ describe Php2Rb::Converter do
 
   it "should support removing elements from a hash" do
     php("unset ( $elements[$k] )").should equal_ruby("elements.delete k")
+  end
+
+  it "should support removing instance variables by setting them to nil" do
+    php("unset( $this->foo );").should equal_ruby("@foo = nil")
+  end
+
+  it "shoulds upport removing instance variables with an arbitrary key" do
+    php("unset ($this->$name)").should equal_ruby('instance_variable_set(:"@#{name}", nil)')
   end
 
   it "should convert unpacking a list" do
@@ -459,6 +504,21 @@ describe Php2Rb::Converter do
       "class Foo { function bar() {self::createAssocArgs($args); } }").
     should equal_ruby(
       "class Foo \n def bar \n self.class.createAssocArgs(args) \n end \ end")
+  end
+
+  it "should convert class constant gets" do
+    php(
+      "class Foo { function bar() { return self::OT_HTML; } }").
+    should equal_ruby(
+      "class Foo; def bar; return self.class::OT_HTML; end; end")
+  end
+
+  it "should convert clone expression" do
+    php("clone $t").should equal_ruby("t.dup")
+  end
+
+  it "should convert parameterized 'new'" do
+    php("new $className( $arg )").should equal_ruby("Object.const_get(className).new(arg)")
   end
 
   it "should convert instanceof" do
@@ -496,6 +556,10 @@ describe Php2Rb::Converter do
       end
     end
 
+  end
+
+  it "should mangle variables starting with upper case" do
+    php("$PFreport = true").should equal_ruby("_PFreport = true")
   end
 
   it "should convert require_once" do

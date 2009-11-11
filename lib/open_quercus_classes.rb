@@ -17,6 +17,7 @@ module Php2Rb
     Program::BreakStatement => [:target],
     Program::ForStatement => [:init, :test, :incr, :block],
     Program::ThrowStatement => [:expr],
+    Program::DoStatement => [:test, :block],
     Expr::BinaryExpr => [:left, :right],
     Expr::AssignExpr => [:var, :value],
     Expr::AssignRefExpr => [:var, :value],
@@ -41,7 +42,11 @@ module Php2Rb
     Expr::ListHeadExpr => [:var_list, :key_list],
     Expr::ListExpr => [:list_head, :value],
     Expr::ClassMethodExpr => [:name, :args],
-    Expr::InstanceOfExpr => [:right]
+    Expr::InstanceOfExpr => [:right],
+    Expr::ThisFieldVarGetExpr => [:name_expr],
+    Expr::ClassConstExpr => [:name],
+    Expr::VarNewExpr => [:name, :args],
+    Expr::VarExpr => [:name]
   }.each do |klass, keys|
     klass.instance_eval do
       keys.each do |key|

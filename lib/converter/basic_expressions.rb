@@ -87,17 +87,34 @@ module Php2Rb
       ruby_method :to_i, s(:arglist), p(node.expr)
     end
 
-    def unset_var_expr(node)
-      raise "how?" unless node_type(node.var) == :array_get_expr
+    def to_array_expr(node)
+      ruby_method :to_a, s(:arglist), p(node.expr)
+    end
 
-      ruby_method :delete, p(node.var.index), p(node.var.expr)
+    def unset_var_expr(node)
+      var_type = node_type(node.var)
+      return unset_instance_var(node) if var_type == :this_field_expr
+      return ruby_method(:delete, p(node.var.index), p(node.var.expr)) if var_type == :array_get_expr
+      return unset_instance_var_arg(node.var) if var_type == :this_field_var_get_expr
+      raise_error(node, "unset_var_expr on #{node_type(node.var)} not supported")
+    end
+
+    def unset_instance_var(node)
+      s(:iasgn, :"@#{node.var.name}", s(:nil))
+    end
+
+    def unset_instance_var_arg(node)
+      instance_var = s(:dsym, "@", s(:evstr, p(node.name_expr)))
+      ruby_method :instance_variable_set, s(:arglist, instance_var, s(:nil))
+    end
+
+    def class_const_expr(node)
+      s(:colon2, s(:call, s(:self), :class, s(:arglist)), node.name.to_sym)
     end
 
     def list_expr(node)
-      # s(:masgn, s(:array, s(:lasgn, :element), s(:lasgn, :content), s(:lasgn, :params), s(:lasgn, :tags)), s(:splat, s(:call, nil, :data, s(:arglist))))
       refs = node.list_head.var_list.collect {|k| s(:lasgn, k.name.to_sym) }
       s(:masgn, s(:array, *refs), s(:splat, p(node.value)))
-      # list_expr
     end
 
     def include_once_expr(node)
@@ -107,6 +124,20 @@ module Php2Rb
         p(node)
       end
       s(:call, nil, :require, s(:arglist, arg))
+    end
+
+    def clone_expr(node)
+      s(:call, p(node.expr), :dup, s(:arglist))
+    end
+
+    def var_new_expr(node)
+      const_get_expr = ruby_method :const_get, s(:arglist, p(node.name)), s(:const, :Object)
+      ruby_method :new, arguments(node.args), const_get_expr
+    end
+
+    def to_boolean_expr(node)
+      s(:call, s(:const, :Php2Rb), :to_bool, s(:arglist, p(node.expr)))
+
     end
   end
 end
